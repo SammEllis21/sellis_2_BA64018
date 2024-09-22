@@ -1,0 +1,105 @@
+---
+title: "sellis21_2"
+author: "Samantha Ellis"
+date: "2024-09-21"
+output: html_document
+---
+ 
+
+```{r}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+dir.create("images")
+```
+
+```{r}
+install.packages("lpSolveAPI")
+```
+
+```{r}
+library(lpSolveAPI)
+```
+
+
+In the Weigelt Corporation problem, there are ten decision variables and 12 constraints.The decision variables are the various combinations of Plants (1,2,and 3) and Product Sizes (Large, Medium, and Small).The tenth decision variable that is added for the logistics is "y" for the equal percentage constraint. 
+
+```{r}
+#lp object with the 9 decision variables and no constraints
+#however, it is entered as 10 decision variables due to the equal percentage constraint later
+lprec<-make.lp(0,10)
+```
+
+```{r}
+#objective function
+set.objfn(lprec, c(420,360,300,420,360,300,420,360,300,0))
+```
+
+```{r}
+#Change lp to max instead of min
+lp.control(lprec,sense='max')
+```
+
+```{r}
+#add constraints
+
+  #Plant 1 Production Capacity 
+add.constraint(lprec, c(1,1,1,0,0,0,0,0,0,0), "<=",750)
+  #Plant 2 Production Capacity 
+add.constraint(lprec, c(0,0,0,1,1,1,0,0,0,0), "<=",900)
+  #Plant 3 Production Capacity 
+add.constraint(lprec, c(0,0,0,0,0,0,1,1,1,0), "<=",900)
+
+  #Plant 1 Storage Capacity 
+add.constraint(lprec, c(20,15,12,0,0,0,0,0,0,0), "<=",13000)
+  #Plant 2 Storage Capacity 
+add.constraint(lprec, c(0,0,0,20,15,12,0,0,0,0), "<=",12000)
+  #Plant 3 Storage Capacity 
+add.constraint(lprec, c(0,0,0,0,0,0,20,15,12,0), "<=",5000)
+
+  #Plant 1 Sales 
+add.constraint(lprec, c(1,1,1,0,0,0,0,0,0,0), "<=",900)
+  #Plant 2 Sales 
+add.constraint(lprec, c(0,0,0,1,1,1,0,0,0,0), "<=",1200)
+  #Plant 3 Sales 
+add.constraint(lprec, c(0,0,0,0,0,0,1,1,1,0), "<=",750)
+
+  #Plant 1 Equal Percentage
+add.constraint(lprec, c(1,1,1,0,0,0,0,0,0,-750), "=",0)
+  #Plant 2 Equal Percentage
+add.constraint(lprec, c(0,0,0,1,1,1,0,0,0,-900), "=",0)
+  #Plant 3 Equal Percentage
+add.constraint(lprec, c(0,0,0,0,0,0,1,1,1,-450), "=",0)
+```
+
+```{r}
+write.lp(lprec, filename = "wcp.lp",type = "lp")
+```
+
+```{r}
+solve(lprec)
+```
+
+```{r}
+#print model
+lprec
+```
+```{r}
+get.objective(lprec)
+get.variables(lprec)
+```
+The maximum profit would be $696,000. 
+To approach the maximum profit the variables would need to be the following;
+Plant 1
+  516 large units produced per day
+  177 medium units produced per day
+  0 small units produced per day
+Plant 2
+  0 large units produced per day
+  666 medium units produced per day
+  166 small units produced per day
+Plant 3
+  0 large units produced per day
+  0 medium units produced per day
+  146 small units produced per day
+ 
+Each plant is using 92.6% of its excess capacity. 
+
